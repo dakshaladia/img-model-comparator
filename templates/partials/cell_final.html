@@ -1,0 +1,14 @@
+<div id="cell-{{ gen.id }}" class="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+    {% if gen.label %}
+    <p class="text-xs font-medium text-gray-400 px-3 pt-2">{{ gen.label }}</p>
+    {% endif %}
+
+    {% if gen.status == "complete" %}
+        <img src="{{ gen.output_url }}" alt="{{ gen.label }}" class="w-full aspect-square object-cover">
+        <p class="text-xs text-gray-500 px-3 py-1.5">{{ gen.generation_ms }}ms</p>
+    {% else %}
+        <div class="flex items-center justify-center aspect-square">
+            <p class="text-xs text-red-400 px-3">{{ gen.error or "Generation failed" }}</p>
+        </div>
+    {% endif %}
+</div>

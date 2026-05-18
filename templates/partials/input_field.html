@@ -1,8 +1,20 @@
 <div data-input-name="{{ input.name }}" class="space-y-1.5">
-    <label class="block text-sm font-medium text-gray-300">
-        {{ input.name | replace("_", " ") | title }}
-    </label>
+    <div class="flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-300">
+            {{ input.name | replace("_", " ") | title }}
+        </label>
+        {% if input.sweepable %}
+        <button
+            type="button"
+            onclick="toggleSweep('{{ input.name }}')"
+            data-sweep-btn="{{ input.name }}"
+            class="text-xs px-2 py-0.5 rounded border border-gray-600 text-gray-400 hover:border-blue-500 hover:text-blue-400 transition-colors"
+        >Sweep</button>
+        {% endif %}
+    </div>
 
+    {# ── Fixed mode (default, visible) ── #}
+    <div class="input-fixed">
     {% if input.enum %}
         <select
             name="input__{{ input.name }}"
@@ -47,6 +59,43 @@
             {% if input.default is not none %}value="{{ input.default }}"{% endif %}
             class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
         >
+    {% endif %}
+    </div>
+
+    {# ── Sweep mode (hidden by default) ── #}
+    {% if input.sweepable %}
+    <div class="input-sweep hidden">
+        {% if input.enum %}
+            <div class="flex flex-wrap gap-2">
+            {% for val in input.enum %}
+                <label class="flex items-center gap-1.5 text-sm text-gray-300 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 cursor-pointer hover:border-blue-500">
+                    <input type="checkbox" name="sweep__{{ input.name }}" value="{{ val }}" class="accent-blue-500">
+                    {{ val }}
+                </label>
+            {% endfor %}
+            </div>
+
+        {% elif input.type == "boolean" %}
+            <div class="flex gap-2">
+                <label class="flex items-center gap-1.5 text-sm text-gray-300 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 cursor-pointer hover:border-blue-500">
+                    <input type="checkbox" name="sweep__{{ input.name }}" value="true" class="accent-blue-500">
+                    true
+                </label>
+                <label class="flex items-center gap-1.5 text-sm text-gray-300 bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 cursor-pointer hover:border-blue-500">
+                    <input type="checkbox" name="sweep__{{ input.name }}" value="false" class="accent-blue-500">
+                    false
+                </label>
+            </div>
+
+        {% else %}
+            <input
+                type="text"
+                name="sweep__{{ input.name }}"
+                placeholder="e.g. 1, 3, 5, 7"
+                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+            >
+        {% endif %}
+    </div>
     {% endif %}
 
     {% if input.description %}

@@ -1,0 +1,9 @@
+{% if truncated %}
+<p class="text-xs text-yellow-400 mb-3">Sweep limited to 9 values.</p>
+{% endif %}
+
+<div class="grid {{ grid_cols }} gap-4">
+    {% for gen in generations %}
+        {% include "partials/cell_polling.html" %}
+    {% endfor %}
+</div>
