@@ -6,18 +6,18 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 DATABASE_PATH = "data/sweep.db"
 
 SUPPORTED_MODEL_SLUGS = [
+    "google/imagen-4-fast",
     "black-forest-labs/flux-schnell",
     "black-forest-labs/flux-1.1-pro",
-    "google/imagen-4-fast",
     "bytedance/seedream-4",
     "recraft-ai/recraft-v3",
     "stability-ai/stable-diffusion-3.5-large",
 ]
 
 SUPPORTED_MODELS = {
+    "google/imagen-4-fast": "Imagen 4 Fast",
     "black-forest-labs/flux-schnell": "Flux Schnell",
     "black-forest-labs/flux-1.1-pro": "Flux 1.1 Pro",
-    "google/imagen-4-fast": "Imagen 4 Fast",
     "bytedance/seedream-4": "Seedream 4",
     "recraft-ai/recraft-v3": "Recraft v3",
     "stability-ai/stable-diffusion-3.5-large": "SD 3.5 Large",

@@ -1,19 +1,22 @@
-<div id="cell-{{ gen.id }}" class="bg-gray-900 border {{ 'border-red-500/50' if gen.status == 'failed' else 'border-gray-700' }} rounded-lg overflow-hidden">
+<div id="cell-{{ gen.id }}" class="frame {{ 'frame--failed' if gen.status == 'failed' else '' }}">
     {% if gen.label %}
-    <p class="text-xs font-medium text-gray-400 px-3 pt-2">{{ gen.label }}</p>
+    <span class="frame-label">{{ gen.label }}</span>
     {% endif %}
 
     {% if gen.status == "complete" %}
         <a href="{{ gen.output_url }}" target="_blank" class="block">
-            <img src="{{ gen.output_url }}" alt="{{ gen.label }}" class="w-full aspect-square object-cover hover:opacity-90 transition-opacity">
+            <img src="{{ gen.output_url }}" alt="{{ gen.label }}">
         </a>
-        <p class="text-xs text-gray-500 px-3 py-1.5">{{ "%.1f" | format(gen.generation_ms / 1000) }}s</p>
+        <span class="frame-timing">{{ "%.1f" | format(gen.generation_ms / 1000) }}s</span>
     {% else %}
         <div class="flex flex-col items-center justify-center aspect-square gap-2 px-4">
-            <svg class="h-6 w-6 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <p class="text-xs text-red-400 text-center">{{ gen.error or "Generation failed" }}</p>
+            <p class="label-mono" style="color:var(--danger)">Failed</p>
+            <p class="mono text-center" style="font-size:11px;color:var(--ink-3)">{{ gen.error or "Generation failed" }}</p>
         </div>
     {% endif %}
 </div>

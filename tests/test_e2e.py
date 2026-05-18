@@ -10,11 +10,11 @@ def test_index_page(client):
     assert resp.status_code == 200
     html = resp.text
     assert "Sweep" in html
-    assert "Parameter exploration for generative image models" in html
+    assert "Parameter sweep" in html
     assert html.count("<option") == 6
     assert "Flux Schnell" in html
     assert 'value="black-forest-labs/flux-schnell"' in html
-    assert "Run a sweep to see results here" in html
+    assert "Run a sweep to see results" in html
     assert "SWEEP_COSTS" in html
 
 
@@ -58,7 +58,7 @@ def test_sweep_single_gen(client):
     html = resp.text
     assert "grid-cols-1" in html
     assert html.count("hx-get") == 1
-    assert "Generating..." in html
+    assert "Generating" in html
 
 
 # ── POST /sweep — numeric sweep ─────────────────────────────────────
@@ -116,11 +116,9 @@ def test_sweep_prompt(client):
 
 def test_sweep_prompt_labels_truncated(client):
     long = "a very detailed and elaborate scene " * 5
-    resp = client.post("/sweep", data=[
-        ("slug", "black-forest-labs/flux-schnell"),
-        ("sweep__prompt", long),
-        ("sweep__prompt", long + " at night"),
-    ])
+    body = "slug=black-forest-labs/flux-schnell&sweep__prompt=" + long.replace(" ", "+") + "&sweep__prompt=" + (long + " at night").replace(" ", "+")
+    resp = client.post("/sweep", content=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
     html = resp.text
     assert "..." in html
 
@@ -134,7 +132,7 @@ def test_sweep_truncation(client):
         "sweep__seed": ",".join(str(i) for i in range(15)),
     })
     html = resp.text
-    assert "limited to 9" in html
+    assert "truncated to 9" in html
     assert html.count("hx-get") == 9
 
 
@@ -149,7 +147,7 @@ def test_cell_pending(client):
     assert resp.status_code == 200
     html = resp.text
     assert "hx-get" in html
-    assert "Generating..." in html
+    assert "Generating" in html
 
 
 def test_cell_complete(client):
@@ -181,4 +179,4 @@ def test_cell_failed(client):
     html = resp.text
     assert "hx-get" not in html
     assert "Rate limited" in html
-    assert "border-red-500" in html
+    assert "frame--failed" in html
