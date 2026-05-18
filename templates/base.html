@@ -4,15 +4,355 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sweep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <style>
+        :root {
+            --bg:           #0d0c0b;
+            --surface:      #161412;
+            --surface-2:    #1e1b18;
+            --border:       #2a2622;
+            --border-strong:#3a342e;
+            --ink:          #f3ede2;
+            --ink-2:        #c8c1b3;
+            --ink-3:        #8a8275;
+            --ink-4:        #585045;
+            --accent:       oklch(0.82 0.16 85);
+            --accent-soft:  oklch(0.82 0.16 85 / 0.12);
+            --accent-ink:   #0d0c0b;
+            --danger:       oklch(0.65 0.19 25);
+        }
+
+        body {
+            font-family: 'Geist', system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            background: var(--bg);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Typography ────────────────────────────────── */
+        .label-mono {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .mono {
+            font-family: 'Geist Mono', monospace;
+        }
+        .text-heading {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        /* ── Field ─────────────────────────────────────── */
+        .field {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 7px 10px;
+            color: var(--ink);
+            font-family: 'Geist', system-ui, sans-serif;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        select.field {
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a8275' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+        }
+        textarea.field {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* ── Buttons ───────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 4px;
+            font-family: 'Geist', system-ui, sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border-color: var(--accent);
+        }
+        .btn-primary:hover { filter: brightness(1.08); }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: var(--ink-3);
+            border-color: var(--border);
+        }
+        .btn-ghost:hover {
+            border-color: var(--border-strong);
+            color: var(--ink-2);
+        }
+        .btn-accent-ghost {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-accent-ghost:hover {
+            background: var(--accent-soft);
+        }
+
+        /* ── Segmented toggle ──────────────────────────── */
+        .seg {
+            display: inline-flex;
+            gap: 2px;
+            padding: 2px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+        }
+        .seg button {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            color: var(--ink-4);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .seg button.is-on {
+            background: var(--surface-2);
+            color: var(--ink-2);
+        }
+        .seg button.is-on.is-accent {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* ── Chip ──────────────────────────────────────── */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10.5px;
+            letter-spacing: 0.03em;
+            padding: 4px 10px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--ink-3);
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .chip .dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--ink-4);
+            transition: background 0.15s;
+        }
+        .chip.is-on {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .chip.is-on .dot {
+            background: var(--accent);
+        }
+
+        /* ── Frame (grid cell) ─────────────────────────── */
+        .frame {
+            position: relative;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            background: var(--surface);
+        }
+        .frame--failed {
+            border-color: color-mix(in oklch, var(--danger), var(--border) 60%);
+        }
+        .frame-label {
+            position: absolute;
+            top: 0; left: 0;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            padding: 4px 8px;
+            background: oklch(0.1 0 0 / 0.75);
+            backdrop-filter: blur(8px);
+            color: var(--ink-2);
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        .frame-index {
+            position: absolute;
+            bottom: 0; right: 0;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: oklch(0.1 0 0 / 0.75);
+            backdrop-filter: blur(8px);
+            color: var(--ink-4);
+            z-index: 2;
+        }
+        .frame-timing {
+            position: absolute;
+            bottom: 0; left: 0;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: oklch(0.1 0 0 / 0.75);
+            backdrop-filter: blur(8px);
+            color: var(--ink-3);
+            z-index: 2;
+        }
+        .frame img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            display: block;
+            animation: fadeUp 0.3s ease-out;
+        }
+
+        /* ── Stripes (loading) ─────────────────────────── */
+        .stripes {
+            background: repeating-linear-gradient(
+                135deg,
+                var(--surface) 0px,
+                var(--surface) 8px,
+                var(--surface-2) 8px,
+                var(--surface-2) 16px
+            );
+        }
+
+        /* ── Spinner ───────────────────────────────────── */
+        .spinner {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* ── Num chip (range slider companion) ─────────── */
+        .num-chip {
+            font-family: 'Geist Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--ink);
+            min-width: 42px;
+            text-align: center;
+        }
+
+        /* ── Sweep value pills ─────────────────────────── */
+        .sweep-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .sweep-pill {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 100px;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* ── Info banner ───────────────────────────────── */
+        .info-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--ink-3);
+            margin-bottom: 12px;
+        }
+        .info-banner svg { flex-shrink: 0; }
+
+        /* ── Range input ───────────────────────────────── */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid var(--bg);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid var(--bg);
+        }
+
+        /* ── Animations ────────────────────────────────── */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── HTMX states ──────────────────────────────── */
         .htmx-request .btn-label { display: none; }
-        .htmx-request .btn-loading { display: inline; }
+        .htmx-request .btn-loading { display: inline-flex; align-items: center; gap: 6px; }
+        .htmx-request .spinner-inline { display: inline-block; }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
-    <div class="max-w-6xl mx-auto px-6 py-8">
+<body class="min-h-screen">
+    <div class="max-w-5xl mx-auto px-5 py-6">
         {% block content %}{% endblock %}
     </div>
     <script src="/static/sweep.js"></script>

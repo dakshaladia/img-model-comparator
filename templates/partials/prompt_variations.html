@@ -1,7 +1,15 @@
+<p class="label-mono mb-2" style="color:var(--ink-4)">{{ variations|length }} variations</p>
 {% for variation in variations %}
-<textarea
-    name="sweep__prompt"
-    rows="2"
-    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 text-sm focus:outline-none focus:border-blue-500"
->{{ variation }}</textarea>
+<div class="flex gap-2 items-start">
+    <span class="mono flex-shrink-0" style="font-size:10px;color:var(--ink-4);padding-top:9px">{{ "%02d" | format(loop.index) }}.</span>
+    <textarea
+        name="sweep__prompt"
+        rows="2"
+        class="field flex-1 mono"
+        style="font-size:12px"
+    >{{ variation }}</textarea>
+    <button type="button" onclick="this.parentElement.remove(); updateCostPreview();"
+        class="flex-shrink-0" style="color:var(--ink-4);padding-top:7px;cursor:pointer;background:none;border:none"
+        aria-label="Remove variation">&times;</button>
+</div>
 {% endfor %}

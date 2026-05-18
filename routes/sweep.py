@@ -66,14 +66,22 @@ async def create_sweep(request: Request):
             if input_type == "array" and cast == []:
                 continue
             fixed_inputs[name] = cast
-        elif key.startswith("sweep__") and not sweep_name:
+        elif key.startswith("sweep__") and not sweep_name and value.strip():
             sweep_name = key[len("sweep__"):]
 
-    # Collect sweep values: checkboxes submit multiple entries, text uses commas
+    # Collect sweep values: checkboxes/textareas submit multiple entries,
+    # single text input uses commas. Only comma-split when there's one entry.
     if sweep_name:
         raw_list = form.getlist(f"sweep__{sweep_name}")
-        for raw in raw_list:
-            for v in raw.split(","):
+        if len(raw_list) == 1:
+            # Single entry — comma-separated text input (numeric/string sweep)
+            for v in raw_list[0].split(","):
+                v = v.strip()
+                if v:
+                    sweep_values_raw.append(v)
+        else:
+            # Multiple entries — checkboxes or prompt textareas, each is a full value
+            for v in raw_list:
                 v = v.strip()
                 if v:
                     sweep_values_raw.append(v)

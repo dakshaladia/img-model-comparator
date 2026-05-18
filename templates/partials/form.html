@@ -5,14 +5,22 @@
         {% include "partials/input_field.html" %}
     {% endfor %}
 
-    <button
-        type="submit"
-        hx-disabled-elt="this"
-        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-wait text-white font-medium rounded-lg px-6 py-2.5 transition-colors"
-    >
-        <span class="btn-label">Run</span>
-        <span class="btn-loading hidden">Running...</span>
-    </button>
-
-    <p id="cost-preview" class="text-xs text-gray-500 text-center"></p>
+    <div class="flex items-center gap-3 pt-2">
+        <button
+            type="submit"
+            hx-disabled-elt="this"
+            class="btn btn-primary"
+        >
+            <span class="btn-label flex items-center gap-2">
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor"><polygon points="0,0 10,6 0,12"/></svg>
+                Run
+            </span>
+            <span class="btn-loading hidden">
+                <span class="spinner" style="width:14px;height:14px;border-width:2px;"></span>
+                Running...
+            </span>
+        </button>
+        <button type="reset" class="btn btn-ghost">Reset</button>
+        <p id="cost-preview" class="label-mono flex-1 text-right" style="color:var(--ink-4)"></p>
+    </div>
 </form>

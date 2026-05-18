@@ -1,8 +1,18 @@
 {% if truncated %}
-<p class="text-xs text-yellow-400 mb-3">Sweep limited to 9 values.</p>
+<div class="info-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Sweep truncated to 9 cells. Reduce value count for full matrix.
+</div>
 {% endif %}
 
-<div class="grid {{ grid_cols }} gap-4">
+<div class="flex items-baseline justify-between mb-3">
+    <div class="flex items-baseline gap-2">
+        <span style="font-size:14px;font-weight:600;color:var(--ink)">Sheet</span>
+        <span class="label-mono" style="color:var(--ink-4)">{{ generations|length }} cells</span>
+    </div>
+</div>
+
+<div class="grid {{ grid_cols }}" style="gap:10px">
     {% for gen in generations %}
         {% include "partials/cell_polling.html" %}
     {% endfor %}

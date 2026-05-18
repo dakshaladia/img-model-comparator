@@ -46,6 +46,10 @@ function activateSweep(wrapper, inputName) {
     }
     if (sweep) {
         sweep.classList.remove("hidden");
+        // Activate sweep field names (data-sweep-name → name)
+        sweep.querySelectorAll("[data-sweep-name]").forEach(function (el) {
+            el.setAttribute("name", el.getAttribute("data-sweep-name"));
+        });
     }
 
     // Prompt sweep: copy base prompt text into display span
@@ -81,6 +85,10 @@ function deactivateSweep(wrapper, inputName) {
     }
     if (sweep) {
         sweep.classList.add("hidden");
+        // Deactivate sweep field names (remove name, keep data-sweep-name)
+        sweep.querySelectorAll("[data-sweep-name]").forEach(function (el) {
+            el.removeAttribute("name");
+        });
         // Clear sweep inputs
         sweep.querySelectorAll("input[type=checkbox]").forEach(function (el) {
             el.checked = false;

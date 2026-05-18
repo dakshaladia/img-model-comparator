@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-10">
-    <h1 class="text-3xl font-bold mb-1">Sweep</h1>
-    <p class="text-gray-400">Parameter exploration for generative image models.</p>
-</div>
+<header class="mb-8">
+    <h1 class="text-heading mb-0.5">Parameter sweep</h1>
+    <p id="model-readout" class="label-mono" style="color:var(--ink-3)"></p>
+</header>
 
-<div class="mb-6">
-    <label for="model-select" class="block text-sm font-medium text-gray-300 mb-2">Model</label>
+<div class="mb-5">
+    <label class="label-mono block mb-1.5" style="color:var(--ink-4)">Model</label>
     <select
         id="model-select"
         name="slug"
@@ -15,23 +15,33 @@
         hx-target="#form-target"
         hx-trigger="change, load"
         hx-swap="innerHTML"
-        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        class="field"
     >
         {% for slug in model_slugs %}
-        <option value="{{ slug }}">{{ models[slug] }} &mdash; {{ slug }}</option>
+        <option value="{{ slug }}">{{ models[slug] }}</option>
         {% endfor %}
     </select>
 </div>
 
 <div id="form-target"></div>
 
-<div id="results-target" class="mt-6">
-    <div class="flex items-center justify-center py-16 text-gray-600 text-sm">
-        Run a sweep to see results here.
+<div id="results-target" class="mt-8">
+    <div class="flex items-center justify-center py-20" style="color:var(--ink-4)">
+        <p class="label-mono">Run a sweep to see results</p>
     </div>
 </div>
 
 <script>
     window.SWEEP_COSTS = {{ costs | tojson }};
+    // Update slug readout when model changes
+    function updateReadout() {
+        var sel = document.getElementById('model-select');
+        var readout = document.getElementById('model-readout');
+        if (sel && readout) readout.textContent = sel.value;
+    }
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'model-select') updateReadout();
+    });
+    document.addEventListener('DOMContentLoaded', updateReadout);
 </script>
 {% endblock %}
