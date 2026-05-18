@@ -1,0 +1,55 @@
+<div data-input-name="{{ input.name }}" class="space-y-1.5">
+    <label class="block text-sm font-medium text-gray-300">
+        {{ input.name | replace("_", " ") | title }}
+    </label>
+
+    {% if input.enum %}
+        <select
+            name="input__{{ input.name }}"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        >
+            {% for val in input.enum %}
+            <option value="{{ val }}" {% if input.default is not none and val | string == input.default | string %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+        </select>
+
+    {% elif input.type == "boolean" %}
+        <select
+            name="input__{{ input.name }}"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        >
+            <option value="true" {% if input.default == true %}selected{% endif %}>true</option>
+            <option value="false" {% if input.default == false %}selected{% endif %}>false</option>
+        </select>
+
+    {% elif input.type in ("number", "integer") %}
+        <input
+            type="number"
+            name="input__{{ input.name }}"
+            {% if input.default is not none %}value="{{ input.default }}"{% endif %}
+            {% if input.minimum is not none %}min="{{ input.minimum }}"{% endif %}
+            {% if input.maximum is not none %}max="{{ input.maximum }}"{% endif %}
+            step="{{ 1 if input.type == 'integer' else 0.01 }}"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        >
+
+    {% elif input.name == "prompt" %}
+        <textarea
+            name="input__{{ input.name }}"
+            rows="3"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        >{{ input.default or "" }}</textarea>
+
+    {% else %}
+        <input
+            type="text"
+            name="input__{{ input.name }}"
+            {% if input.default is not none %}value="{{ input.default }}"{% endif %}
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+        >
+    {% endif %}
+
+    {% if input.description %}
+        <p class="text-xs text-gray-500">{{ input.description }}</p>
+    {% endif %}
+</div>

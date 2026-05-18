@@ -1,0 +1,16 @@
+<form id="sweep-form" hx-post="/sweep" hx-target="#results-target" hx-swap="innerHTML" class="space-y-5">
+    <input type="hidden" name="slug" value="{{ slug }}">
+
+    {% for input in inputs %}
+        {% include "partials/input_field.html" %}
+    {% endfor %}
+
+    <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5 transition-colors"
+    >
+        Run
+    </button>
+</form>
+
+<div id="results-target" class="mt-6"></div>

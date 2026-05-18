@@ -13,6 +13,7 @@ class ModelInput(BaseModel):
     maximum: float | None = None
     enum: list[str] | None = None
     sweepable: bool = True
+    order: int = 0
 
 
 class SweepAxis(BaseModel):
