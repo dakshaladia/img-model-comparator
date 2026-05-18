@@ -46,6 +46,15 @@ function activateSweep(wrapper, inputName) {
     if (sweep) {
         sweep.classList.remove("hidden");
     }
+
+    // Prompt sweep: copy base prompt text into display span
+    if (inputName === "prompt") {
+        var baseDisplay = wrapper.querySelector(".prompt-base-display");
+        var textarea = fixed ? fixed.querySelector("textarea") : null;
+        if (baseDisplay && textarea) {
+            baseDisplay.textContent = textarea.value || "(empty)";
+        }
+    }
 }
 
 function deactivateSweep(wrapper, inputName) {
@@ -78,5 +87,10 @@ function deactivateSweep(wrapper, inputName) {
         sweep.querySelectorAll("input[type=text]").forEach(function (el) {
             el.value = "";
         });
+        // Clear prompt variations
+        var variations = sweep.querySelector(".prompt-variations");
+        if (variations) {
+            variations.innerHTML = "";
+        }
     }
 }

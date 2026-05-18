@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
+from config import PROMPT_SWEEP_DIRECTIONS
 from services import replicate_client, schema, storage
 
 router = APIRouter()
@@ -25,4 +26,5 @@ async def model_form(request: Request, slug: str):
     return templates.TemplateResponse(request, "partials/form.html", {
         "inputs": inputs,
         "slug": slug,
+        "directions": PROMPT_SWEEP_DIRECTIONS,
     })

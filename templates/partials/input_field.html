@@ -87,6 +87,38 @@
                 </label>
             </div>
 
+        {% elif input.name == "prompt" %}
+            <div class="text-sm text-gray-400 mb-2">
+                Base: <span class="prompt-base-display text-gray-200 italic"></span>
+            </div>
+            <div class="flex gap-2 mb-3">
+                <select class="prompt-direction flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-blue-500">
+                    {% for dir in directions %}
+                    <option value="{{ dir }}">{{ dir }}</option>
+                    {% endfor %}
+                </select>
+                <select class="prompt-count bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="3">3</option>
+                    <option value="5" selected>5</option>
+                    <option value="7">7</option>
+                    <option value="9">9</option>
+                </select>
+                <button
+                    type="button"
+                    hx-post="/prompt-expand"
+                    hx-target="closest .prompt-variations"
+                    hx-swap="innerHTML"
+                    hx-vals='js:{
+                        base_prompt: document.querySelector("[data-name-backup=\"input__prompt\"]")?.value
+                                     || document.querySelector("[name=\"input__prompt\"]")?.value || "",
+                        direction: document.querySelector(".prompt-direction")?.value,
+                        count: document.querySelector(".prompt-count")?.value
+                    }'
+                    class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors whitespace-nowrap"
+                >Preview</button>
+            </div>
+            <div class="prompt-variations space-y-2"></div>
+
         {% else %}
             <input
                 type="text"

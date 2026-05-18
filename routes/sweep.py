@@ -24,6 +24,14 @@ def _cast_value(value: str, input_type: str):
     return value
 
 
+def _make_label(name: str, value) -> str:
+    """Build a display label, truncated to 60 chars."""
+    raw = f"{name}={value}"
+    if len(raw) > 60:
+        return raw[:57] + "..."
+    return raw
+
+
 @router.post("/sweep")
 async def create_sweep(request: Request):
     form = await request.form()
@@ -66,7 +74,7 @@ async def create_sweep(request: Request):
         truncated = len(sweep_values_raw) > MAX_SWEEP_SIZE
         sweep_values_raw = sweep_values_raw[:MAX_SWEEP_SIZE]
         cast_values = [_cast_value(v, input_type) for v in sweep_values_raw]
-        labels = [f"{sweep_name}={v}" for v in cast_values]
+        labels = [_make_label(sweep_name, v) for v in cast_values]
 
         axis_config = {
             "input_name": sweep_name,
