@@ -54,6 +54,7 @@ def parse_schema(raw_schema: dict) -> list[ModelInput]:
             minimum=prop.get("minimum"),
             maximum=prop.get("maximum"),
             enum=enum_values,
+            format=prop.get("format", ""),
             sweepable=sweepable,
             order=prop.get("x-order", idx),
         ))

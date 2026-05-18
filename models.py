@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class ModelInput(BaseModel):
     """A single input field parsed from a Replicate model's OpenAPI schema."""
     name: str
-    type: str  # "string", "number", "integer", "boolean"
-    default: str | float | int | bool | None = None
+    type: str  # "string", "number", "integer", "boolean", "array"
+    default: Any = None
     description: str = ""
     minimum: float | None = None
     maximum: float | None = None
     enum: list[str] | None = None
+    format: str = ""
     sweepable: bool = True
     order: int = 0
 

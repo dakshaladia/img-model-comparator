@@ -21,6 +21,11 @@ def _cast_value(value: str, input_type: str):
         return float(value)
     if input_type == "boolean":
         return value.lower() == "true"
+    if input_type == "array":
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, ValueError):
+            return []
     return value
 
 
@@ -55,7 +60,12 @@ async def create_sweep(request: Request):
             name = key[len("input__"):]
             if value == "":
                 continue
-            fixed_inputs[name] = _cast_value(value, type_map.get(name, "string"))
+            input_type = type_map.get(name, "string")
+            cast = _cast_value(value, input_type)
+            # Skip empty arrays — let Replicate use its default
+            if input_type == "array" and cast == []:
+                continue
+            fixed_inputs[name] = cast
         elif key.startswith("sweep__") and not sweep_name:
             sweep_name = key[len("sweep__"):]
 

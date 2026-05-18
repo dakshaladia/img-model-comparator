@@ -1,7 +1,8 @@
 /**
- * Sweep toggle logic.
+ * Sweep toggle logic + cost preview.
  * - toggleSweep(name): activate/deactivate sweep mode for one input
  * - One-axis constraint: only one input can be in sweep mode at a time
+ * - updateCostPreview(): recalculate estimated cost from model + sweep count
  */
 
 function toggleSweep(inputName) {
@@ -93,4 +94,66 @@ function deactivateSweep(wrapper, inputName) {
             variations.innerHTML = "";
         }
     }
+    updateCostPreview();
 }
+
+
+// ── Cost preview ────────────────────────────────────────────────────
+
+function updateCostPreview() {
+    var el = document.getElementById("cost-preview");
+    if (!el) return;
+
+    var costs = window.SWEEP_COSTS || {};
+    var modelSelect = document.getElementById("model-select");
+    if (!modelSelect) return;
+
+    var slug = modelSelect.value;
+    var costPerImage = costs[slug];
+    if (costPerImage === undefined) { el.textContent = ""; return; }
+
+    // Count how many images will be generated
+    var count = 1;
+    var activeWrapper = document.querySelector("[data-sweep-active]");
+    if (activeWrapper) {
+        var sweep = activeWrapper.querySelector(".input-sweep");
+        if (sweep) {
+            // Checkboxes (enum/boolean sweep)
+            var checked = sweep.querySelectorAll("input[type=checkbox]:checked");
+            if (checked.length > 0) {
+                count = checked.length;
+            } else {
+                // Comma-separated text input
+                var textInput = sweep.querySelector("input[type=text]");
+                if (textInput && textInput.value.trim()) {
+                    count = textInput.value.split(",").filter(function(v) { return v.trim(); }).length;
+                }
+                // Prompt variations (textareas from Claude)
+                var promptTextareas = sweep.querySelectorAll("textarea[name='sweep__prompt']");
+                if (promptTextareas.length > 0) {
+                    count = promptTextareas.length;
+                }
+            }
+        }
+    }
+
+    var total = (costPerImage * count).toFixed(3);
+    var modelName = modelSelect.options[modelSelect.selectedIndex].text.split(" — ")[0];
+    el.textContent = "Estimated cost: ~$" + total + " (" + count + (count === 1 ? " image" : " images") + " \u00d7 " + modelName + ")";
+}
+
+// Attach cost preview updates via event delegation
+document.addEventListener("change", function(e) {
+    if (e.target.id === "model-select" || e.target.closest("#sweep-form")) {
+        updateCostPreview();
+    }
+});
+document.addEventListener("input", function(e) {
+    if (e.target.closest("#sweep-form")) {
+        updateCostPreview();
+    }
+});
+// Update after HTMX swaps (e.g. prompt variations loaded)
+document.addEventListener("htmx:afterSwap", function() {
+    updateCostPreview();
+});

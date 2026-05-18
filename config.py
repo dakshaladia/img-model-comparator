@@ -14,6 +14,24 @@ SUPPORTED_MODEL_SLUGS = [
     "stability-ai/stable-diffusion-3.5-large",
 ]
 
+SUPPORTED_MODELS = {
+    "black-forest-labs/flux-schnell": "Flux Schnell",
+    "black-forest-labs/flux-1.1-pro": "Flux 1.1 Pro",
+    "google/imagen-4-fast": "Imagen 4 Fast",
+    "bytedance/seedream-4": "Seedream 4",
+    "recraft-ai/recraft-v3": "Recraft v3",
+    "stability-ai/stable-diffusion-3.5-large": "SD 3.5 Large",
+}
+
+COST_PER_IMAGE_USD = {
+    "black-forest-labs/flux-schnell": 0.003,
+    "black-forest-labs/flux-1.1-pro": 0.04,
+    "google/imagen-4-fast": 0.02,
+    "bytedance/seedream-4": 0.025,
+    "recraft-ai/recraft-v3": 0.04,
+    "stability-ai/stable-diffusion-3.5-large": 0.065,
+}
+
 NEVER_SWEEP_INPUT_NAMES = {"image", "mask", "init_image", "control_image"}
 
 PROMPT_SWEEP_DIRECTIONS = [

@@ -7,10 +7,12 @@
 
     <button
         type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5 transition-colors"
+        hx-disabled-elt="this"
+        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-wait text-white font-medium rounded-lg px-6 py-2.5 transition-colors"
     >
-        Run
+        <span class="btn-label">Run</span>
+        <span class="btn-loading hidden">Running...</span>
     </button>
-</form>
 
-<div id="results-target" class="mt-6"></div>
+    <p id="cost-preview" class="text-xs text-gray-500 text-center"></p>
+</form>

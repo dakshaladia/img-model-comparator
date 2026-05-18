@@ -54,9 +54,10 @@
 
     {% else %}
         <input
-            type="text"
+            type="{{ 'url' if input.format == 'uri' else 'text' }}"
             name="input__{{ input.name }}"
             {% if input.default is not none %}value="{{ input.default }}"{% endif %}
+            {% if input.format == "uri" %}placeholder="https://..."{% endif %}
             class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
         >
     {% endif %}
@@ -106,16 +107,20 @@
                 <button
                     type="button"
                     hx-post="/prompt-expand"
-                    hx-target="closest .prompt-variations"
+                    hx-target="next .prompt-variations"
                     hx-swap="innerHTML"
-                    hx-vals='js:{
-                        base_prompt: document.querySelector("[data-name-backup=\"input__prompt\"]")?.value
-                                     || document.querySelector("[name=\"input__prompt\"]")?.value || "",
-                        direction: document.querySelector(".prompt-direction")?.value,
-                        count: document.querySelector(".prompt-count")?.value
-                    }'
-                    class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors whitespace-nowrap"
-                >Preview</button>
+                    hx-disabled-elt="this"
+                    hx-vals="js:{
+                        base_prompt: document.querySelector('[data-name-backup=input__prompt]')?.value
+                                     || document.querySelector('[name=input__prompt]')?.value || '',
+                        direction: document.querySelector('.prompt-direction')?.value,
+                        count: document.querySelector('.prompt-count')?.value
+                    }"
+                    class="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-wait text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors whitespace-nowrap"
+                >
+                    <span class="btn-label">Preview</span>
+                    <span class="btn-loading hidden">Expanding...</span>
+                </button>
             </div>
             <div class="prompt-variations space-y-2"></div>
 

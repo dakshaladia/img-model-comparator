@@ -5,3 +5,5 @@ python-dotenv
 replicate
 anthropic
 python-multipart
+pytest
+httpx
