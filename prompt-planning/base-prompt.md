@@ -1,12 +1,8 @@
 I'm building Sweep — a take-home project for an engineering role at Luma 
-(multimodal AI lab, makers of the Ray-3.14 video model). 8-hour budget. The 
-take-home asks me to clone-and-improve an existing product. My next round 
-after this is a live coding interview, so I need to own every line of code 
-in this codebase.
+(multimodal AI lab, makers of the Ray-3.14 video model). 8-hour budget. The take-home asks me to clone-and-improve an existing product. My next round after this is a live coding interview, so I need to own every line of code in this codebase.
 
 WHAT I'M CLONING
-Replicate's per-model playground at replicate.com/[model] — the auto-generated 
-form-on-a-page where you fill in a model's inputs and hit Run to get one output.
+Replicate's per-model playground at replicate.com/[model] — the auto-generated form-on-a-page where you fill in a model's inputs and hit Run to get one output.
 
 WHAT I'M IMPROVING
 Sweep mode. Mark any input as "swept," provide a list of values, run them all 
@@ -92,6 +88,4 @@ WORKING STYLE
 - If you're about to use a library or pattern I might not know, briefly 
   explain it before writing the code.
 
-Read it carefully and confirm 
-you understand the architecture. Don't write any code yet. Ask any 
-clarifying questions, then I'll send the first hour's prompt.
+Read it carefully and confirm you understand the architecture. Don't write any code yet. Ask any clarifying questions, then I'll send the first hour's prompt.

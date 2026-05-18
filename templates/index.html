@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-1">Sweep</h1>
+<p class="text-gray-400 mb-8">Generate and compare images across any parameter.</p>
+
+<div class="mb-6">
+    <label for="model-select" class="block text-sm font-medium text-gray-300 mb-2">Model</label>
+    <select
+        id="model-select"
+        name="slug"
+        hx-get="/model-form"
+        hx-target="#form-target"
+        hx-trigger="change, load"
+        hx-swap="innerHTML"
+        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:border-blue-500"
+    >
+        {% for slug in model_slugs %}
+        <option value="{{ slug }}">{{ slug }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<div id="form-target"></div>
+{% endblock %}
