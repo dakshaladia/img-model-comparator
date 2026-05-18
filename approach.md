@@ -8,7 +8,7 @@ Sweep is a parameter exploration tool for image generation models. It's a clone 
 
 The product supports 6 image models from 5 different vendors. Each model's form is generated dynamically from its OpenAPI schema — adding a 7th model is one line in config.
 
-**Live URL:** https://[YOUR-APP-NAME].fly.dev
+**Live URL:** https://sweep-playground.fly.dev/
 
 ## Why this for Luma specifically
 
