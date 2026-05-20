@@ -8,6 +8,28 @@
             <img src="{{ gen.output_url }}" alt="{{ gen.label }}">
         </a>
         <span class="frame-timing">{{ "%.1f" | format(gen.generation_ms / 1000) }}s</span>
+
+        {# ── Caption: prompt + sweep details + download ── #}
+        <div style="padding:6px 8px;border-top:1px solid var(--border)">
+            {% if gen_inputs.get("prompt") %}
+            <p class="mono" style="font-size:10.5px;color:var(--ink-2);line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ gen_inputs["prompt"] }}</p>
+            {% endif %}
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex flex-wrap gap-1">
+                    {% for key, val in gen_inputs.items() if key != "prompt" %}
+                    <span class="mono" style="font-size:9.5px;color:var(--ink-4)">{{ key }}={{ val }}</span>
+                    {% if not loop.last %}<span style="color:var(--ink-4);font-size:9px">&middot;</span>{% endif %}
+                    {% endfor %}
+                </div>
+                <a href="/download/{{ gen.id }}" class="flex-shrink-0" style="color:var(--ink-3)" title="Download">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
     {% else %}
         <div class="flex flex-col items-center justify-center aspect-square gap-2 px-4">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

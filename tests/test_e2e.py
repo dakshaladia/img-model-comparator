@@ -136,6 +136,31 @@ def test_sweep_truncation(client):
     assert html.count("hx-get") == 9
 
 
+# ── POST /sweep — two-axis sweep ─────────────────────────────────────
+
+def test_sweep_two_axis(client):
+    resp = client.post("/sweep", content="slug=black-forest-labs/flux-schnell&input__prompt=test&sweep__num_outputs=1,2&sweep__aspect_ratio=1:1&sweep__aspect_ratio=16:9",
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert resp.status_code == 200
+    html = resp.text
+    assert "<table" in html, "Two-axis should render as table"
+    assert "<th" in html, "Should have header cells"
+    assert html.count("hx-get") == 4, "2x2 = 4 cells"
+    assert "&times;" in html, "Sheet header should show axis names with x"
+
+
+def test_sweep_two_axis_labels(client):
+    resp = client.post("/sweep", data={
+        "slug": "black-forest-labs/flux-schnell",
+        "input__prompt": "test",
+        "sweep__num_outputs": "1,2",
+        "sweep__seed": "42,99",
+    })
+    html = resp.text
+    assert "num_outputs=1" in html
+    assert "seed=42" in html
+
+
 # ── GET /cell/{id} — polling states ─────────────────────────────────
 
 def test_cell_pending(client):

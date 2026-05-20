@@ -6,19 +6,19 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 DATABASE_PATH = "data/sweep.db"
 
 SUPPORTED_MODEL_SLUGS = [
-    "google/imagen-4-fast",
     "black-forest-labs/flux-schnell",
     "black-forest-labs/flux-1.1-pro",
     "bytedance/seedream-4",
+    "google/imagen-4-fast",
     "recraft-ai/recraft-v3",
     "stability-ai/stable-diffusion-3.5-large",
 ]
 
 SUPPORTED_MODELS = {
-    "google/imagen-4-fast": "Imagen 4 Fast",
     "black-forest-labs/flux-schnell": "Flux Schnell",
     "black-forest-labs/flux-1.1-pro": "Flux 1.1 Pro",
     "bytedance/seedream-4": "Seedream 4",
+    "google/imagen-4-fast": "Imagen 4 Fast",
     "recraft-ai/recraft-v3": "Recraft v3",
     "stability-ai/stable-diffusion-3.5-large": "SD 3.5 Large",
 }
@@ -32,7 +32,7 @@ COST_PER_IMAGE_USD = {
     "stability-ai/stable-diffusion-3.5-large": 0.065,
 }
 
-NEVER_SWEEP_INPUT_NAMES = {"image", "mask", "init_image", "control_image"}
+NEVER_SWEEP_INPUT_NAMES = {"image", "mask", "init_image", "control_image", "num_outputs", "max_images"}
 
 PROMPT_SWEEP_DIRECTIONS = [
     "camera angle",

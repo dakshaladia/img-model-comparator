@@ -1,0 +1,12 @@
+services:
+  sweep:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - sweep_data:/app/data
+
+volumes:
+  sweep_data:

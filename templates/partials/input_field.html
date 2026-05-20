@@ -36,7 +36,7 @@
         </select>
 
     {% elif input.type in ("number", "integer") %}
-        {% if input.minimum is not none and input.maximum is not none %}
+        {% if input.type == "number" and input.minimum is not none and input.maximum is not none %}
         <div class="flex items-center gap-3">
             <input
                 type="range"
@@ -44,7 +44,7 @@
                 {% if input.default is not none %}value="{{ input.default }}"{% endif %}
                 min="{{ input.minimum }}"
                 max="{{ input.maximum }}"
-                step="{{ 1 if input.type == 'integer' else 0.01 }}"
+                step="0.01"
                 oninput="this.parentElement.querySelector('.num-chip').textContent=this.value"
             >
             <span class="num-chip">{{ input.default if input.default is not none else input.minimum }}</span>

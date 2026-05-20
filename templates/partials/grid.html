@@ -1,19 +1,52 @@
 {% if truncated %}
 <div class="info-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    Sweep truncated to 9 cells. Reduce value count for full matrix.
+    Sweep truncated to {{ generations|length }} cells. Reduce value count for full matrix.
 </div>
 {% endif %}
 
 <div class="flex items-baseline justify-between mb-3">
     <div class="flex items-baseline gap-2">
         <span style="font-size:14px;font-weight:600;color:var(--ink)">Sheet</span>
+        {% if two_axis %}
+        <span class="label-mono" style="color:var(--accent)">{{ col_axis_name }} &times; {{ row_axis_name }}</span>
+        {% endif %}
         <span class="label-mono" style="color:var(--ink-4)">{{ generations|length }} cells</span>
     </div>
 </div>
 
+{% if two_axis %}
+{# ── Two-axis: table layout with row/column headers ── #}
+<div style="overflow-x:auto">
+<table style="border-collapse:separate;border-spacing:10px">
+    <thead>
+        <tr>
+            <th></th>
+            {% for header in col_headers %}
+            <th class="label-mono" style="color:var(--ink-3);padding:0 0 4px 0;text-align:center;font-weight:500;min-width:160px">{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row_idx in range(row_headers|length) %}
+        <tr>
+            <th class="label-mono" style="color:var(--ink-3);padding:0 8px 0 0;text-align:right;font-weight:500;vertical-align:top;white-space:nowrap">{{ row_headers[row_idx] }}</th>
+            {% for gen in gen_grid[row_idx] %}
+            <td style="padding:0;vertical-align:top">
+                {% include "partials/cell_polling.html" %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% else %}
+{# ── Single-axis or no sweep: flat grid ── #}
 <div class="grid {{ grid_cols }}" style="gap:10px">
     {% for gen in generations %}
         {% include "partials/cell_polling.html" %}
     {% endfor %}
 </div>
+{% endif %}
