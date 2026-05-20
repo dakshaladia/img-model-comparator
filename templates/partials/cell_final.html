@@ -18,18 +18,28 @@
             {% endif %}
             <div class="flex items-center justify-between gap-2">
                 <div class="flex flex-wrap gap-1">
-                    {% for key, val in gen_inputs.items() if key != "prompt" %}
+                    {% for key, val in gen_inputs.items() if key != "prompt" and not key.startswith("_") %}
                     <span class="mono" style="font-size:9.5px;color:var(--ink-4)">{{ key }}={{ val }}</span>
                     {% if not loop.last %}<span style="color:var(--ink-4);font-size:9px">&middot;</span>{% endif %}
                     {% endfor %}
                 </div>
-                <a href="/download/{{ gen.id }}" class="flex-shrink-0" style="color:var(--ink-3)" title="Download">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                </a>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button type="button" onclick="branchFromCell({{ gen.id }})" style="color:var(--ink-3);background:none;border:none;cursor:pointer;padding:0" title="Branch from this">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="6" y1="3" x2="6" y2="15"/>
+                            <circle cx="18" cy="6" r="3"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <path d="M18 9a9 9 0 0 1-9 9"/>
+                        </svg>
+                    </button>
+                    <a href="/download/{{ gen.id }}" class="flex-shrink-0" style="color:var(--ink-3)" title="Download">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
     {% else %}

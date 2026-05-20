@@ -71,6 +71,13 @@ def create_sweep_run(model_slug: str, fixed_inputs: dict, axis_config: dict) -> 
     return row_id
 
 
+def get_sweep_run(run_id: int) -> dict | None:
+    conn = _connect()
+    row = conn.execute("SELECT * FROM sweep_runs WHERE id=?", (run_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 # ── generations ─────────────────────────────────────────────────────
 
 def create_generation(sweep_run_id: int, inputs: dict, axis_position: int, label: str) -> int:

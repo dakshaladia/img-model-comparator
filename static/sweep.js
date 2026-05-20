@@ -154,6 +154,83 @@ function updateAxisLabels() {
 }
 
 
+// ── Branch from cell ─────────────────────────────────────────────────
+
+function branchFromCell(genId) {
+    fetch("/cell/" + genId + "/inputs")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var inputs = data.inputs || {};
+            var modelSlug = data.model_slug || "";
+
+            // Deactivate all sweeps
+            document.querySelectorAll("[data-sweep-active]").forEach(function (wrapper) {
+                var name = wrapper.getAttribute("data-input-name");
+                deactivateSweep(wrapper, name);
+            });
+
+            // Clear model comparison chips
+            var primary = document.getElementById("model-select");
+            if (primary) {
+                document.querySelectorAll("[data-model-chip]").forEach(function (chip) {
+                    chip.classList.remove("is-on");
+                });
+            }
+
+            // Switch model if needed, then fill values
+            if (modelSlug && primary && primary.value !== modelSlug) {
+                primary.value = modelSlug;
+                // Trigger HTMX to reload the form for the new model
+                htmx.trigger(primary, "change");
+                // Wait for the form to settle before filling values
+                var handler = function(e) {
+                    if (e.detail.target && e.detail.target.id === "form-target") {
+                        document.removeEventListener("htmx:afterSettle", handler);
+                        fillFormValues(inputs);
+                    }
+                };
+                document.addEventListener("htmx:afterSettle", handler);
+            } else {
+                fillFormValues(inputs);
+            }
+        });
+}
+
+function fillFormValues(inputs) {
+    var form = document.getElementById("sweep-form");
+    if (!form) return;
+
+    for (var key in inputs) {
+        var field = form.querySelector('[name="input__' + key + '"]');
+        if (!field) continue;
+
+        var val = inputs[key];
+        field.value = val;
+
+        // Update range slider chip if present
+        if (field.type === "range") {
+            var chip = field.parentElement.querySelector(".num-chip");
+            if (chip) chip.textContent = val;
+        }
+    }
+
+    // Scroll to form
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Brief highlight
+    form.style.outline = "2px solid var(--accent)";
+    form.style.outlineOffset = "4px";
+    form.style.borderRadius = "4px";
+    setTimeout(function() {
+        form.style.outline = "";
+        form.style.outlineOffset = "";
+    }, 1200);
+
+    updateCostPreview();
+    syncModelChips();
+}
+
+
 // ── Cross-model comparison ───────────────────────────────────────────
 
 function toggleModelCompare(slug) {

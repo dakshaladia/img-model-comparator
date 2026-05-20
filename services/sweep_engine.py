@@ -22,9 +22,11 @@ async def run_one_generation(
         await asyncio.to_thread(
             storage.update_generation_status, gen_id, "running"
         )
+        # Strip internal metadata before sending to Replicate
+        api_inputs = {k: v for k, v in inputs.items() if not k.startswith("_")}
         start = time.time()
         try:
-            url = await replicate_client.run_model(model_slug, inputs)
+            url = await replicate_client.run_model(model_slug, api_inputs)
             generation_ms = int((time.time() - start) * 1000)
             await asyncio.to_thread(
                 storage.update_generation_status,
@@ -58,9 +60,10 @@ async def run_shared_generation(
             await asyncio.to_thread(
                 storage.update_generation_status, gid, "running"
             )
+        api_inputs = {k: v for k, v in inputs.items() if not k.startswith("_")}
         start = time.time()
         try:
-            url = await replicate_client.run_model(model_slug, inputs)
+            url = await replicate_client.run_model(model_slug, api_inputs)
             generation_ms = int((time.time() - start) * 1000)
             for gid in gen_ids:
                 await asyncio.to_thread(

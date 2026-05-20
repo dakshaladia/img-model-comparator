@@ -186,7 +186,7 @@ async def create_sweep(request: Request):
                 filtered = await _filter_inputs_for_model(model_slug, fixed_inputs)
                 row = []
                 for val, label in zip(axis["values"], axis["labels"]):
-                    gen_inputs = {**filtered, axis["input_name"]: val}
+                    gen_inputs = {**filtered, axis["input_name"]: val, "_model_slug": model_slug}
                     compound_label = f"{model_label}, {label}"
                     if len(compound_label) > 60:
                         compound_label = compound_label[:57] + "..."
@@ -237,10 +237,11 @@ async def create_sweep(request: Request):
             pos = 0
             for model_slug, model_label in zip(all_models, model_labels):
                 filtered = await _filter_inputs_for_model(model_slug, fixed_inputs)
+                filtered_with_model = {**filtered, "_model_slug": model_slug}
                 for rep in range(num_outputs):
                     rep_label = f"{model_label} #{rep + 1}" if num_outputs > 1 else model_label
                     gen_id = await asyncio.to_thread(
-                        storage.create_generation, sweep_run_id, filtered, pos, rep_label
+                        storage.create_generation, sweep_run_id, filtered_with_model, pos, rep_label
                     )
                     gen = await asyncio.to_thread(storage.get_generation, gen_id)
                     generations.append(gen)
@@ -474,3 +475,22 @@ async def download_image(gen_id: int):
         media_type=f"image/{ext}",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.get("/cell/{gen_id}/inputs")
+async def get_cell_inputs(gen_id: int):
+    """Return the inputs and model slug for a generation (used by Branch)."""
+    gen = await asyncio.to_thread(storage.get_generation, gen_id)
+    if not gen:
+        return {"inputs": {}, "model_slug": ""}
+    inputs = {}
+    try:
+        inputs = json.loads(gen.get("inputs", "{}"))
+    except (json.JSONDecodeError, TypeError):
+        pass
+    # _model_slug is injected per-cell for cross-model sweeps; fall back to sweep_run
+    model_slug = inputs.pop("_model_slug", None)
+    if not model_slug:
+        sweep_run = await asyncio.to_thread(storage.get_sweep_run, gen["sweep_run_id"])
+        model_slug = sweep_run["model_slug"] if sweep_run else ""
+    return {"inputs": inputs, "model_slug": model_slug}
