@@ -100,6 +100,14 @@ The route parses up to 2 `sweep__*` keys from the form. With one axis, it's a fl
 
 Replicate hosts images on `replicate.delivery`. The HTML `download` attribute on `<a>` tags only works for same-origin URLs — cross-origin downloads silently open a new tab instead. The fix: `GET /download/{gen_id}` streams the image through our server with `Content-Disposition: attachment`, making the browser trigger a real file download. The view-in-new-tab link still goes directly to Replicate for speed.
 
+**Aspect ratio sweeps as CSS reframing, not regeneration.**
+
+When `aspect_ratio` is the swept axis, the system makes one API call instead of N. The image is generated once, and each grid cell displays the same image with a different CSS `aspect-ratio` + `object-fit: cover` — the browser handles the cropping. This is the correct behavior: aspect ratio is a framing decision, not a content decision. Sweeping 5 aspect ratios costs one generation instead of five. The implementation uses `run_shared_generation()` in the sweep engine, which runs one Replicate call and copies the output URL to all generation rows.
+
+**Three-layer input validation.**
+
+Prompt is required for every model. Validation enforces this at three levels: (1) HTML `required` attribute on the prompt textarea blocks empty submissions in fixed mode. (2) Client-side JS intercepts the HTMX request before it fires — checks for prompt in fixed mode or expanded variations in sweep mode, and shows an inline error banner if missing. This also catches the case where sweep is toggled on prompt but the user clicks Run without clicking Expand first. (3) Server-side route validation confirms prompt exists in `fixed_inputs` or as a sweep axis before creating any generation rows.
+
 ## How I directed the AI tools
 
 The prompt direction in this codebase wasn't ambient - every major architectural choice was a specific pushback I made to Claude Code, and the session logs show them. The ones worth highlighting:
@@ -182,6 +190,8 @@ In rough order of leverage:
 5. **Per-cell rating and export.** Mark cells thumbs-up/down, export the rated grid as an eval dataset. Closes the loop between "generate" and "fine-tune."
 
 6. **Real persistence with accounts.** Postgres + simple auth, multi-user product surface.
+
+7. A tree which versions all these changes, is visually available to the user, to click on any node/edge, and perform different kinds of sweeps. This would be the absoulte ultimate way to give a user the freedom to experiment.
 
 ## Scope summary
 
