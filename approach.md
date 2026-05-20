@@ -8,7 +8,9 @@ Sweep is a parameter exploration tool for image generation models. It's a clone 
 
 **Third, two-axis sweeps.** Sweep two parameters simultaneously to produce a rows x columns ablation grid. Toggle sweep on `cfg` (columns) and `seed` (rows) and the grid renders every combination. The first axis toggled becomes columns, the second becomes rows. Combined with the `num_outputs` multiplier — which repeats each cell N times for random-seed variation — this enables serious parameter exploration.
 
-**Fourth, per-cell captions and download.** Every completed cell shows the full prompt, all input parameters, generation time, and a download button that actually downloads the image file (proxied through the server to work cross-origin).
+**Fourth, cross-model sweeps.** Compare the same prompt across multiple models in one grid. Select a primary model from the dropdown (its form drives the inputs), then toggle additional models via comparison chips below. The system generates across all selected models, filtering each model's inputs to only parameters its schema accepts. Composable with one parameter sweep — models become rows, parameter values become columns — giving you a table like "Flux Schnell vs Imagen 4 Fast vs SD 3.5 Large across 3 lighting conditions."
+
+**Fifth, per-cell captions and download.** Every completed cell shows the full prompt, all input parameters, generation time, and a download button that actually downloads the image file (proxied through the server to work cross-origin).
 
 The product supports 6 image models from 5 different vendors. Each model's form is generated dynamically from its OpenAPI schema - adding a 7th model is one line in config, making the codebase very scalable.
 
@@ -104,6 +106,12 @@ Replicate hosts images on `replicate.delivery`. The HTML `download` attribute on
 
 When `aspect_ratio` is the swept axis, the system makes one API call instead of N. The image is generated once, and each grid cell displays the same image with a different CSS `aspect-ratio` + `object-fit: cover` — the browser handles the cropping. This is the correct behavior: aspect ratio is a framing decision, not a content decision. Sweeping 5 aspect ratios costs one generation instead of five. The implementation uses `run_shared_generation()` in the sweep engine, which runs one Replicate call and copies the output URL to all generation rows.
 
+**Cross-model comparison with per-model input filtering.**
+
+Different models have different input schemas — Flux has `go_fast` and `megapixels`, SD 3.5 has `cfg` and `prompt_strength`, Imagen has `safety_filter_level`. When comparing across models, naively sending all parameters to every model would cause 422 validation errors. The solution: `_filter_inputs_for_model()` fetches each model's cached schema and returns only the parameters that model defines. Each model receives a tailored input dict. The user configures inputs based on the primary model's form, and the system silently drops irrelevant parameters for comparison models. This is the correct behavior: `cfg=7` is meaningful for SD 3.5 but meaningless for Imagen, so Imagen just doesn't receive it.
+
+The composition rule is: cross-model + 0 param sweeps = flat grid (one cell per model). Cross-model + 1 param sweep = table (params as columns, models as rows). Cross-model + 2 param sweeps = blocked (would need 3D visualization). The UI disables model comparison chips when 2 parameter sweeps are active.
+
 **Three-layer input validation.**
 
 Prompt is required for every model. Validation enforces this at three levels: (1) HTML `required` attribute on the prompt textarea blocks empty submissions in fixed mode. (2) Client-side JS intercepts the HTMX request before it fires — checks for prompt in fixed mode or expanded variations in sweep mode, and shows an inline error banner if missing. This also catches the case where sweep is toggled on prompt but the user clicks Run without clicking Expand first. (3) Server-side route validation confirms prompt exists in `fixed_inputs` or as a sweep axis before creating any generation rows.
@@ -143,8 +151,6 @@ Cuts I made deliberately:
 
 - **Causal-diff explanation between two cells.** Click two cells, get Claude's explanation of what about the parameter difference caused the visual difference. Pairs well with the AI judge. Another ~90 minutes.
 
-- **Cross-model sweeps.** Same prompt across N models in one grid. Real value for "which model should I use for this kind of work," but spreads the product across two different axes of comparison (parameters vs models). Cleaner to ship one direction first.
-
 - **History view / past sweeps gallery.** Single-session by design. SQLite persists everything but there's no UI to navigate past sweeps. Adding it is a sidebar plus a few routes.
 
 - **Authentication, accounts, sharing.** Single-user product. Adding accounts is a Postgres-and-auth path that's correct for production but out of scope for a slice.
@@ -181,15 +187,13 @@ In rough order of leverage:
 
 1. **AI-as-judge ranking + causal diff.** After a sweep, score the grid by a user-criterion and explain inter-cell differences. Turns Sweep from "generate variations" into "generate, evaluate, and understand variations" - a complete exploration loop.
 
-2. **Cross-model sweeps.** Same prompt across N models in one grid. The right tool for "which model fits this kind of work."
+2. **Sweep over video model parameters.** This is the actual pitch to Luma. Same primitive - pick a model, mark inputs as swept, run in parallel, compare - applied to video generation. Cell renders a short clip thumbnail with hover-to-play. Internally useful for evaluating Ray-3.14 against checkpoints; externally useful as the missing tool for video prompt engineering.
 
-3. **Sweep over video model parameters.** This is the actual pitch to Luma. Same primitive - pick a model, mark inputs as swept, run in parallel, compare - applied to video generation. Cell renders a short clip thumbnail with hover-to-play. Internally useful for evaluating Ray-3.14 against checkpoints; externally useful as the missing tool for video prompt engineering.
+3. **Saved sweep templates with shareable URLs.** "Run my noir-lighting prompt sweep against this prompt" as a one-click action.
 
-4. **Saved sweep templates with shareable URLs.** "Run my noir-lighting prompt sweep against this prompt" as a one-click action.
+4. **Per-cell rating and export.** Mark cells thumbs-up/down, export the rated grid as an eval dataset. Closes the loop between "generate" and "fine-tune."
 
-5. **Per-cell rating and export.** Mark cells thumbs-up/down, export the rated grid as an eval dataset. Closes the loop between "generate" and "fine-tune."
-
-6. **Real persistence with accounts.** Postgres + simple auth, multi-user product surface.
+5. **Real persistence with accounts.** Postgres + simple auth, multi-user product surface.
 
 7. A tree which versions all these changes, is visually available to the user, to click on any node/edge, and perform different kinds of sweeps. This would be the absoulte ultimate way to give a user the freedom to experiment.
 
