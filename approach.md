@@ -2,7 +2,7 @@
 
 Sweep is a parameter exploration tool for image generation models. It's a clone of Replicate's per-model playground - that auto-generated form-on-a-page you get at `replicate.com/[model]` - improved in two specific ways.
 
-**First, sweep mode.** Any input in the form can be toggled from a single value to a range of values. Submitting fires those variations in parallel and streams the results into a labeled comparison grid. Numeric sweeps (guidance, seed, steps) get a comma-separated input. Enum sweeps (aspect ratios, output formats) get a checkbox group. Hit Run and watch the grid populate as each generation completes.
+**First, sweep mode.** Any input in the form can be toggled from a single value to a range of values. Submitting fires those variations in parallel and streams the results into a labeled comparison grid. Numeric sweeps (guidance, seed, steps) get a comma-separated input. Enum sweeps (aspect ratios, output formats) get a checkbox group. Hit Run and watch the grid populate as each generation completes. The num_inference steps controls how many denoising iterations the model runs to produce an image.
 
 **Second, prompt-as-axis sweep.** The prompt is treated as a sweepable input too. Toggle it to Sweep, pick a stylistic direction from a dropdown - camera angle, lighting, art style, mood, composition, time of day, weather, color palette - and Claude Sonnet 4.6 generates N variations of your prompt along that axis. The variations appear as editable textareas you can tweak before hitting Run. The grid then renders the same scene rendered along the chosen creative dimension.
 
