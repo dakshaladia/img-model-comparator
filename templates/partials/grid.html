@@ -1,4 +1,9 @@
-{% if truncated %}
+{% if error %}
+<div class="info-banner" style="border-color:var(--danger)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span style="color:var(--ink-2)">{{ error }}</span>
+</div>
+{% elif truncated %}
 <div class="info-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     Sweep truncated to {{ generations|length }} cells. Reduce value count for full matrix.

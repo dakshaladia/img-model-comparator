@@ -66,6 +66,8 @@
             name="input__{{ input.name }}"
             rows="3"
             class="field"
+            required
+            placeholder="Describe the image to generate..."
         >{{ input.default or "" }}</textarea>
 
     {% else %}
@@ -108,9 +110,9 @@
             </div>
 
         {% elif input.name == "prompt" %}
-            <div style="border:1px solid var(--border);border-radius:4px;padding:8px 10px;margin-bottom:8px;">
-                <span class="mono" style="font-size:10.5px;color:var(--ink-4)">BASE:</span>
-                <span class="prompt-base-display mono" style="font-size:12px;color:var(--ink-2);font-style:italic"></span>
+            <div style="margin-bottom:8px;">
+                <label class="mono block" style="font-size:10.5px;color:var(--ink-4);margin-bottom:4px">BASE PROMPT</label>
+                <textarea class="prompt-base-display field mono" rows="2" style="font-size:12px" placeholder="Enter a base prompt to expand..."></textarea>
             </div>
             <div class="flex gap-2 mb-3">
                 <select class="prompt-direction field flex-1 mono" style="font-size:11px">
@@ -131,8 +133,7 @@
                     hx-swap="innerHTML"
                     hx-disabled-elt="this"
                     hx-vals="js:{
-                        base_prompt: document.querySelector('[data-name-backup=input__prompt]')?.value
-                                     || document.querySelector('[name=input__prompt]')?.value || '',
+                        base_prompt: document.querySelector('.prompt-base-display')?.value || '',
                         direction: document.querySelector('.prompt-direction')?.value,
                         count: document.querySelector('.prompt-count')?.value
                     }"

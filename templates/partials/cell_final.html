@@ -4,8 +4,10 @@
     {% endif %}
 
     {% if gen.status == "complete" %}
+        {% set ar = gen_inputs.get("aspect_ratio", "") if gen_inputs else "" %}
         <a href="{{ gen.output_url }}" target="_blank" class="block">
-            <img src="{{ gen.output_url }}" alt="{{ gen.label }}">
+            <img src="{{ gen.output_url }}" alt="{{ gen.label }}"
+                {% if ar %}style="aspect-ratio:{{ ar | replace(':', '/') }};object-fit:cover;width:100%"{% endif %}>
         </a>
         <span class="frame-timing">{{ "%.1f" | format(gen.generation_ms / 1000) }}s</span>
 

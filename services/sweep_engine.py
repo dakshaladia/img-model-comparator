@@ -40,3 +40,41 @@ async def run_one_generation(
                 error=str(e),
                 generation_ms=generation_ms,
             )
+
+
+async def run_shared_generation(
+    gen_ids: list[int],
+    model_slug: str,
+    inputs: dict,
+    semaphore: asyncio.Semaphore,
+) -> None:
+    """Run one API call and copy the result to all gen_ids.
+
+    Used for aspect_ratio sweeps where the image is generated once
+    and displayed at different CSS aspect ratios.
+    """
+    async with semaphore:
+        for gid in gen_ids:
+            await asyncio.to_thread(
+                storage.update_generation_status, gid, "running"
+            )
+        start = time.time()
+        try:
+            url = await replicate_client.run_model(model_slug, inputs)
+            generation_ms = int((time.time() - start) * 1000)
+            for gid in gen_ids:
+                await asyncio.to_thread(
+                    storage.update_generation_status,
+                    gid, "complete",
+                    output_url=url,
+                    generation_ms=generation_ms,
+                )
+        except Exception as e:
+            generation_ms = int((time.time() - start) * 1000)
+            for gid in gen_ids:
+                await asyncio.to_thread(
+                    storage.update_generation_status,
+                    gid, "failed",
+                    error=str(e),
+                    generation_ms=generation_ms,
+                )

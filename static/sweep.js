@@ -61,12 +61,12 @@ function activateSweep(wrapper, inputName) {
         });
     }
 
-    // Prompt sweep: copy base prompt text into display span
+    // Prompt sweep: copy base prompt text into editable textarea
     if (inputName === "prompt") {
         var baseDisplay = wrapper.querySelector(".prompt-base-display");
         var textarea = fixed ? fixed.querySelector("textarea") : null;
         if (baseDisplay && textarea) {
-            baseDisplay.textContent = textarea.value || "(empty)";
+            baseDisplay.value = textarea.value || "";
         }
     }
 }
@@ -247,6 +247,47 @@ document.addEventListener("input", function(e) {
         updateCostPreview();
     }
 });
+// Validate before HTMX requests
+document.addEventListener("htmx:configRequest", function(e) {
+    var errorHtml = '<div class="info-banner" style="border-color:var(--danger)">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        '<span style="color:var(--ink-2)">MSG</span></div>';
+
+    // Validate prompt-expand: base prompt must not be empty
+    if (e.detail.path === "/prompt-expand") {
+        var basePrompt = document.querySelector(".prompt-base-display");
+        if (!basePrompt || !basePrompt.value.trim()) {
+            e.preventDefault();
+            var variations = document.getElementById("prompt-variations");
+            if (variations) {
+                variations.innerHTML = errorHtml.replace("MSG", "Enter a base prompt before expanding.");
+            }
+            return;
+        }
+    }
+
+    // Validate sweep: prompt must be present
+    if (e.detail.path === "/sweep") {
+        var promptFixed = document.querySelector("[name='input__prompt']");
+        var promptSweepActive = document.querySelector("[data-input-name='prompt'][data-sweep-active]");
+
+        if (promptFixed && promptFixed.value.trim()) return;
+        if (promptSweepActive) {
+            var sweepVariations = document.querySelectorAll("textarea[name='sweep__prompt']");
+            if (sweepVariations.length > 0) return;
+        }
+
+        e.preventDefault();
+        var target = document.getElementById("results-target");
+        if (target) {
+            var msg = promptSweepActive
+                ? "Enter a base prompt and click Expand before running."
+                : "Prompt is required. Enter a prompt before running.";
+            target.innerHTML = errorHtml.replace("MSG", msg);
+        }
+    }
+});
+
 document.addEventListener("htmx:afterSwap", function() {
     updateCostPreview();
     var hint = document.querySelector(".prompt-expand-hint");

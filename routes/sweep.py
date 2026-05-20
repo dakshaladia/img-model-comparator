@@ -103,6 +103,17 @@ async def create_sweep(request: Request):
                 "labels": labels,
             })
 
+    # Validate: prompt must be present (fixed or swept)
+    has_prompt = "prompt" in fixed_inputs or any(a["input_name"] == "prompt" for a in sweep_axes)
+    if not has_prompt:
+        return templates.TemplateResponse(request, "partials/grid.html", {
+            "generations": [],
+            "grid_cols": "grid-cols-1",
+            "truncated": False,
+            "two_axis": False,
+            "error": "Prompt is required. Enter a prompt or expand prompt variations before running.",
+        })
+
     # Extract num_outputs as a multiplier
     num_outputs = int(fixed_inputs.pop("num_outputs", 1) or 1)
     fixed_inputs.pop("max_images", None)
@@ -178,6 +189,7 @@ async def create_sweep(request: Request):
     # ── Single-axis sweep ────────────────────────────────────────────
     elif len(sweep_axes) == 1:
         axis = sweep_axes[0]
+        is_aspect_sweep = axis["input_name"] == "aspect_ratio"
         total = len(axis["values"]) * num_outputs
         truncated = total > MAX_SWEEP_SIZE
         if truncated:
@@ -196,6 +208,7 @@ async def create_sweep(request: Request):
         )
 
         generations = []
+        all_gen_ids = []
         pos = 0
         for val, label in zip(axis["values"], axis["labels"]):
             gen_inputs = {**fixed_inputs, axis["input_name"]: val}
@@ -206,10 +219,19 @@ async def create_sweep(request: Request):
                 )
                 gen = await asyncio.to_thread(storage.get_generation, gen_id)
                 generations.append(gen)
-                asyncio.create_task(
-                    sweep_engine.run_one_generation(gen_id, slug, gen_inputs, _semaphore)
-                )
+                all_gen_ids.append(gen_id)
+                if not is_aspect_sweep:
+                    # Normal sweep: one API call per cell
+                    asyncio.create_task(
+                        sweep_engine.run_one_generation(gen_id, slug, gen_inputs, _semaphore)
+                    )
                 pos += 1
+
+        if is_aspect_sweep:
+            # Aspect ratio sweep: one API call, share result across all cells
+            asyncio.create_task(
+                sweep_engine.run_shared_generation(all_gen_ids, slug, fixed_inputs, _semaphore)
+            )
 
         n = len(generations)
         if n <= 1:
