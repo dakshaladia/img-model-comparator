@@ -22,6 +22,19 @@
         <option value="{{ slug }}">{{ models[slug] }}</option>
         {% endfor %}
     </select>
+    <div class="mt-2">
+        <label class="label-mono block mb-1.5" style="color:var(--ink-4);font-size:9.5px">Compare across models</label>
+        <div id="model-compare" class="flex flex-wrap gap-1.5">
+            {% for slug in model_slugs %}
+            <button type="button" class="chip" data-model-chip="{{ slug }}"
+                onclick="toggleModelCompare('{{ slug }}')">
+                <span class="dot"></span>
+                <span class="mono">{{ models[slug] }}</span>
+            </button>
+            {% endfor %}
+        </div>
+        <p id="model-compare-note" class="mono hidden" style="font-size:10px;color:var(--ink-4);margin-top:4px">Disable one parameter sweep to compare across models.</p>
+    </div>
 </div>
 
 <div id="form-target"></div>

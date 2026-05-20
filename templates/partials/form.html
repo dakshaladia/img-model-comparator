@@ -1,5 +1,6 @@
 <form id="sweep-form" hx-post="/sweep" hx-target="#results-target" hx-swap="innerHTML" class="space-y-5">
     <input type="hidden" name="slug" value="{{ slug }}">
+    <div id="compare-models-inputs"></div>
 
     {% for input in inputs %}
         {% include "partials/input_field.html" %}

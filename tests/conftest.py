@@ -94,9 +94,10 @@ def client(tmp_db, sample_schema):
     """FastAPI TestClient with mocked external APIs."""
     schema_json = json.dumps(sample_schema)
 
-    # Pre-cache the schema so model_form route doesn't call Replicate
+    # Pre-cache schemas so routes don't call Replicate
     from services.storage import cache_schema
     cache_schema("black-forest-labs/flux-schnell", schema_json)
+    cache_schema("google/imagen-4-fast", schema_json)  # same schema for testing
 
     mock_fetch = AsyncMock(return_value=sample_schema)
     mock_run = AsyncMock(return_value="https://replicate.delivery/fake/out.webp")

@@ -136,6 +136,36 @@ def test_sweep_truncation(client):
     assert html.count("hx-get") == 9
 
 
+# ── POST /sweep — cross-model sweep ──────────────────────────────────
+
+def test_sweep_cross_model_flat(client):
+    """Cross-model with no param sweep = flat grid, one cell per model."""
+    resp = client.post("/sweep", content="slug=black-forest-labs/flux-schnell&input__prompt=test&compare_model=google/imagen-4-fast",
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert resp.status_code == 200
+    html = resp.text
+    assert html.count("hx-get") == 2, "Should have 2 cells (2 models)"
+
+
+def test_sweep_cross_model_with_param(client):
+    """Cross-model + 1-axis param sweep = table."""
+    resp = client.post("/sweep", content="slug=black-forest-labs/flux-schnell&input__prompt=test&compare_model=google/imagen-4-fast&sweep__seed=1,2",
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert resp.status_code == 200
+    html = resp.text
+    assert "<table" in html, "Cross-model + param should render as table"
+    assert html.count("hx-get") == 4, "2 models x 2 values = 4 cells"
+
+
+def test_sweep_cross_model_blocks_two_axes(client):
+    """Cross-model + 2 param sweeps = error."""
+    resp = client.post("/sweep", content="slug=black-forest-labs/flux-schnell&input__prompt=test&compare_model=google/imagen-4-fast&sweep__seed=1,2&sweep__num_outputs=1,2",
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
+    assert resp.status_code == 200
+    html = resp.text
+    assert "Disable one parameter sweep" in html
+
+
 # ── POST /sweep — two-axis sweep ─────────────────────────────────────
 
 def test_sweep_two_axis(client):

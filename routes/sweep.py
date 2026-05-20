@@ -7,8 +7,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from config import MAX_CONCURRENCY, MAX_SWEEP_SIZE
-from services import schema, storage, sweep_engine
+from config import MAX_CONCURRENCY, MAX_SWEEP_SIZE, SUPPORTED_MODELS
+from services import replicate_client, schema, storage, sweep_engine
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -55,6 +55,21 @@ def _collect_sweep_values(form, name: str) -> list[str]:
             if v:
                 values.append(v)
     return values
+
+
+async def _filter_inputs_for_model(model_slug: str, inputs: dict) -> dict:
+    """Return only the inputs that this model's schema defines."""
+    cached = await asyncio.to_thread(storage.get_cached_schema, model_slug)
+    if not cached:
+        raw = await replicate_client.fetch_schema(model_slug)
+        await asyncio.to_thread(storage.cache_schema, model_slug, json.dumps(raw))
+        cached = json.dumps(raw)
+    raw_schema = json.loads(cached)
+    valid_names = set(
+        raw_schema.get("components", {}).get("schemas", {})
+        .get("Input", {}).get("properties", {}).keys()
+    )
+    return {k: v for k, v in inputs.items() if k in valid_names}
 
 
 @router.post("/sweep")
@@ -119,6 +134,135 @@ async def create_sweep(request: Request):
     fixed_inputs.pop("max_images", None)
     if num_outputs < 1:
         num_outputs = 1
+
+    # Collect cross-model comparison models
+    compare_models = form.getlist("compare_model")
+    all_models = [slug] + [m for m in compare_models if m != slug]
+    is_cross_model = len(all_models) > 1
+
+    # Cross-model + 2 param axes = not supported
+    if is_cross_model and len(sweep_axes) >= 2:
+        return templates.TemplateResponse(request, "partials/grid.html", {
+            "generations": [],
+            "grid_cols": "grid-cols-1",
+            "truncated": False,
+            "two_axis": False,
+            "error": "Cross-model comparison supports at most one parameter sweep. Disable one parameter sweep to compare across models.",
+        })
+
+    # ── Cross-model sweep ────────────────────────────────────────────
+    if is_cross_model:
+        model_labels = [SUPPORTED_MODELS.get(m, m) for m in all_models]
+
+        if len(sweep_axes) == 1:
+            # Models × parameter values = table
+            axis = sweep_axes[0]
+            total = len(all_models) * len(axis["values"]) * num_outputs
+            truncated = total > MAX_SWEEP_SIZE
+            if truncated:
+                max_cells = MAX_SWEEP_SIZE // num_outputs
+                if max_cells < 1:
+                    max_cells = 1
+                    num_outputs = MAX_SWEEP_SIZE
+                while len(all_models) * len(axis["values"]) > max_cells:
+                    if len(axis["values"]) > 1:
+                        axis["values"] = axis["values"][:-1]
+                        axis["labels"] = axis["labels"][:-1]
+                    elif len(all_models) > 1:
+                        all_models = all_models[:-1]
+                        model_labels = model_labels[:-1]
+                    else:
+                        break
+
+            axis_config = {"axis": axis, "models": all_models}
+            sweep_run_id = await asyncio.to_thread(
+                storage.create_sweep_run, slug, fixed_inputs, axis_config
+            )
+
+            generations = []
+            gen_grid = []
+            pos = 0
+            for model_slug, model_label in zip(all_models, model_labels):
+                filtered = await _filter_inputs_for_model(model_slug, fixed_inputs)
+                row = []
+                for val, label in zip(axis["values"], axis["labels"]):
+                    gen_inputs = {**filtered, axis["input_name"]: val}
+                    compound_label = f"{model_label}, {label}"
+                    if len(compound_label) > 60:
+                        compound_label = compound_label[:57] + "..."
+                    for rep in range(num_outputs):
+                        rep_label = f"{compound_label} #{rep + 1}" if num_outputs > 1 else compound_label
+                        gen_id = await asyncio.to_thread(
+                            storage.create_generation, sweep_run_id, gen_inputs, pos, rep_label
+                        )
+                        gen = await asyncio.to_thread(storage.get_generation, gen_id)
+                        generations.append(gen)
+                        row.append(gen)
+                        asyncio.create_task(
+                            sweep_engine.run_one_generation(gen_id, model_slug, gen_inputs, _semaphore)
+                        )
+                        pos += 1
+                gen_grid.append(row)
+
+            return templates.TemplateResponse(request, "partials/grid.html", {
+                "generations": generations,
+                "grid_cols": "",
+                "truncated": truncated,
+                "two_axis": True,
+                "gen_grid": gen_grid,
+                "col_headers": axis["labels"],
+                "row_headers": model_labels,
+                "col_axis_name": axis["input_name"],
+                "row_axis_name": "model",
+            })
+
+        else:
+            # Models only, no param sweep — flat grid
+            total = len(all_models) * num_outputs
+            truncated = total > MAX_SWEEP_SIZE
+            if truncated:
+                max_models = MAX_SWEEP_SIZE // num_outputs
+                if max_models < 1:
+                    max_models = 1
+                    num_outputs = MAX_SWEEP_SIZE
+                all_models = all_models[:max_models]
+                model_labels = model_labels[:max_models]
+
+            axis_config = {"models": all_models}
+            sweep_run_id = await asyncio.to_thread(
+                storage.create_sweep_run, slug, fixed_inputs, axis_config
+            )
+
+            generations = []
+            pos = 0
+            for model_slug, model_label in zip(all_models, model_labels):
+                filtered = await _filter_inputs_for_model(model_slug, fixed_inputs)
+                for rep in range(num_outputs):
+                    rep_label = f"{model_label} #{rep + 1}" if num_outputs > 1 else model_label
+                    gen_id = await asyncio.to_thread(
+                        storage.create_generation, sweep_run_id, filtered, pos, rep_label
+                    )
+                    gen = await asyncio.to_thread(storage.get_generation, gen_id)
+                    generations.append(gen)
+                    asyncio.create_task(
+                        sweep_engine.run_one_generation(gen_id, model_slug, filtered, _semaphore)
+                    )
+                    pos += 1
+
+            n = len(generations)
+            if n <= 1:
+                grid_cols = "grid-cols-1"
+            elif n in (2, 4):
+                grid_cols = "grid-cols-2"
+            else:
+                grid_cols = "grid-cols-3"
+
+            return templates.TemplateResponse(request, "partials/grid.html", {
+                "generations": generations,
+                "grid_cols": grid_cols,
+                "truncated": truncated,
+                "two_axis": False,
+            })
 
     # ── Two-axis sweep ───────────────────────────────────────────────
     if len(sweep_axes) == 2:

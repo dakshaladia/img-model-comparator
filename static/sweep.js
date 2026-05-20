@@ -30,6 +30,7 @@ function toggleSweep(inputName) {
         wrapper.setAttribute("data-sweep-order", newOrder);
     }
     updateAxisLabels();
+    updateModelCompareState();
     updateCostPreview();
 }
 
@@ -153,6 +154,103 @@ function updateAxisLabels() {
 }
 
 
+// ── Cross-model comparison ───────────────────────────────────────────
+
+function toggleModelCompare(slug) {
+    var chip = document.querySelector('[data-model-chip="' + slug + '"]');
+    if (!chip) return;
+
+    // Don't toggle the primary model — it's always on
+    var primary = document.getElementById("model-select");
+    if (primary && primary.value === slug) return;
+
+    chip.classList.toggle("is-on");
+    syncCompareInputs();
+    updateCostPreview();
+}
+
+function syncModelChips() {
+    // Called when dropdown changes: mark primary as always-on, sync state
+    var primary = document.getElementById("model-select");
+    if (!primary) return;
+    var primarySlug = primary.value;
+
+    document.querySelectorAll("[data-model-chip]").forEach(function (chip) {
+        var slug = chip.getAttribute("data-model-chip");
+        if (slug === primarySlug) {
+            chip.classList.add("is-on");
+        }
+        // Don't auto-deselect others — user may have toggled them
+    });
+    syncCompareInputs();
+    updateModelCompareState();
+}
+
+function syncCompareInputs() {
+    // Populate hidden inputs for comparison models (excluding primary)
+    var container = document.getElementById("compare-models-inputs");
+    if (!container) return;
+    var primary = document.getElementById("model-select");
+    var primarySlug = primary ? primary.value : "";
+
+    container.innerHTML = "";
+    document.querySelectorAll("[data-model-chip].is-on").forEach(function (chip) {
+        var slug = chip.getAttribute("data-model-chip");
+        if (slug !== primarySlug) {
+            var input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "compare_model";
+            input.value = slug;
+            container.appendChild(input);
+        }
+    });
+}
+
+function getSelectedModelCount() {
+    return document.querySelectorAll("[data-model-chip].is-on").length;
+}
+
+function updateModelCompareState() {
+    // Disable comparison chips when 2 parameter sweeps are active
+    var paramSweepCount = document.querySelectorAll("[data-sweep-active]").length;
+    var note = document.getElementById("model-compare-note");
+    var chips = document.querySelectorAll("[data-model-chip]");
+    var primary = document.getElementById("model-select");
+    var primarySlug = primary ? primary.value : "";
+
+    if (paramSweepCount >= 2) {
+        // Disable all non-primary chips, deselect them
+        chips.forEach(function (chip) {
+            var slug = chip.getAttribute("data-model-chip");
+            if (slug !== primarySlug) {
+                chip.classList.remove("is-on");
+                chip.style.opacity = "0.4";
+                chip.style.pointerEvents = "none";
+            }
+        });
+        if (note) note.classList.remove("hidden");
+        syncCompareInputs();
+    } else {
+        chips.forEach(function (chip) {
+            chip.style.opacity = "";
+            chip.style.pointerEvents = "";
+        });
+        if (note) note.classList.add("hidden");
+    }
+}
+
+// Sync chips when dropdown changes
+document.addEventListener("change", function(e) {
+    if (e.target.id === "model-select") syncModelChips();
+});
+// Sync after form loads via HTMX
+document.addEventListener("htmx:afterSettle", function(e) {
+    if (e.detail.target && e.detail.target.id === "form-target") {
+        syncModelChips();
+    }
+});
+
+
 // ── Reset form ──────────────────────────────────────────────────────
 
 function resetForm() {
@@ -160,6 +258,18 @@ function resetForm() {
         var name = wrapper.getAttribute("data-input-name");
         deactivateSweep(wrapper, name);
     });
+    // Clear model comparison
+    var primary = document.getElementById("model-select");
+    var primarySlug = primary ? primary.value : "";
+    document.querySelectorAll("[data-model-chip]").forEach(function (chip) {
+        var slug = chip.getAttribute("data-model-chip");
+        if (slug === primarySlug) {
+            chip.classList.add("is-on");
+        } else {
+            chip.classList.remove("is-on");
+        }
+    });
+    syncCompareInputs();
     var form = document.getElementById("sweep-form");
     if (form) form.reset();
     form.querySelectorAll("input[type=range]").forEach(function (el) {
@@ -230,10 +340,25 @@ function updateCostPreview() {
         if (axisCount > 0) sweepCount *= axisCount;
     });
 
-    var count = sweepCount * numOutputs;
-    var total = (costPerImage * count).toFixed(3);
-    var modelName = modelSelect.options[modelSelect.selectedIndex].text;
-    el.textContent = count + (count === 1 ? " cell" : " cells") + " \u00b7 est $" + total + " \u00b7 " + modelName;
+    // Account for cross-model comparison
+    var selectedModels = document.querySelectorAll("[data-model-chip].is-on");
+    var modelCount = selectedModels.length || 1;
+    var cellsPerModel = sweepCount * numOutputs;
+    var count = cellsPerModel * modelCount;
+
+    // Sum cost across selected models (each has different pricing)
+    var totalCost = 0;
+    if (selectedModels.length > 0) {
+        selectedModels.forEach(function (chip) {
+            var mSlug = chip.getAttribute("data-model-chip");
+            totalCost += (costs[mSlug] || 0) * cellsPerModel;
+        });
+    } else {
+        totalCost = costPerImage * count;
+    }
+
+    var modelLabel = modelCount > 1 ? (modelCount + " models") : modelSelect.options[modelSelect.selectedIndex].text;
+    el.textContent = count + (count === 1 ? " cell" : " cells") + " \u00b7 est $" + totalCost.toFixed(3) + " \u00b7 " + modelLabel;
 }
 
 // Attach cost preview updates via event delegation
