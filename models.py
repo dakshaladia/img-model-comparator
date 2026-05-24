@@ -19,19 +19,12 @@ class ModelInput(BaseModel):
     order: int = 0
 
 
-class SweepAxis(BaseModel):
-    """Which input is being swept and with what values."""
-    input_name: str
-    values: list[str | float | int | bool]
-    labels: list[str]
-
-
 class SweepRun(BaseModel):
     """Mirrors a sweep_runs row."""
     id: int
     model_slug: str
     fixed_inputs: dict
-    axis_config: SweepAxis
+    axis_config: dict | list | None = None
     created_at: str
 
 

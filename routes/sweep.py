@@ -19,9 +19,15 @@ _semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 def _cast_value(value: str, input_type: str):
     """Cast a form string to the appropriate Python type."""
     if input_type == "integer":
-        return int(value)
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return value
     if input_type == "number":
-        return float(value)
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return value
     if input_type == "boolean":
         return value.lower() == "true"
     if input_type == "array":

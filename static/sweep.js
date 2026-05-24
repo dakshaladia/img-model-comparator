@@ -367,9 +367,13 @@ function renderSweepPills(input) {
     if (!container) return;
 
     var vals = input.value.split(",").map(function(v) { return v.trim(); }).filter(Boolean);
-    container.innerHTML = vals.map(function(v) {
-        return '<span class="sweep-pill">' + v + '</span>';
-    }).join("");
+    container.innerHTML = "";
+    vals.forEach(function(v) {
+        var pill = document.createElement("span");
+        pill.className = "sweep-pill";
+        pill.textContent = v;
+        container.appendChild(pill);
+    });
 
     updateCostPreview();
 }

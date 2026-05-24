@@ -235,3 +235,93 @@ def test_cell_failed(client):
     assert "hx-get" not in html
     assert "Rate limited" in html
     assert "frame--failed" in html
+
+
+# ── GET /cell/{id}/inputs — branch feature ─────────────────────────
+
+def test_cell_inputs_returns_inputs_and_slug(client):
+    """Branch endpoint returns stored inputs and model slug."""
+    run_id = storage.create_sweep_run("black-forest-labs/flux-schnell", {"prompt": "test"}, {})
+    gen_id = storage.create_generation(run_id, {"prompt": "test", "seed": 42}, 0, "seed=42")
+
+    resp = client.get(f"/cell/{gen_id}/inputs")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["inputs"]["prompt"] == "test"
+    assert data["inputs"]["seed"] == 42
+    assert data["model_slug"] == "black-forest-labs/flux-schnell"
+
+
+def test_cell_inputs_cross_model_uses_embedded_slug(client):
+    """Cross-model generations embed _model_slug in inputs; branch returns it."""
+    run_id = storage.create_sweep_run("black-forest-labs/flux-schnell", {}, {"models": ["a", "b"]})
+    gen_id = storage.create_generation(
+        run_id,
+        {"prompt": "test", "_model_slug": "google/imagen-4-fast"},
+        0, "Imagen"
+    )
+
+    resp = client.get(f"/cell/{gen_id}/inputs")
+    data = resp.json()
+    assert data["model_slug"] == "google/imagen-4-fast"
+    assert "_model_slug" not in data["inputs"]
+
+
+def test_cell_inputs_not_found(client):
+    resp = client.get("/cell/99999/inputs")
+    data = resp.json()
+    assert data["inputs"] == {}
+    assert data["model_slug"] == ""
+
+
+# ── GET /download/{id} ─────────────────────────────────────────────
+
+def test_download_not_found(client):
+    resp = client.get("/download/99999")
+    assert resp.status_code == 200
+    assert resp.json()["error"] == "not found"
+
+
+def test_download_incomplete_gen(client):
+    """Download returns not-found for non-complete generations."""
+    run_id = storage.create_sweep_run("test/model", {}, {})
+    gen_id = storage.create_generation(run_id, {}, 0, "test")
+
+    resp = client.get(f"/download/{gen_id}")
+    assert resp.status_code == 200
+    assert resp.json()["error"] == "not found"
+
+
+def test_download_complete_gen(client):
+    """Download proxies the image and sets Content-Disposition."""
+    import httpx
+    from unittest.mock import AsyncMock, patch, MagicMock
+
+    run_id = storage.create_sweep_run("test/model", {}, {})
+    gen_id = storage.create_generation(run_id, {}, 0, "test")
+    storage.update_generation_status(
+        gen_id, "complete",
+        output_url="https://replicate.delivery/fake/output.webp",
+        generation_ms=1000,
+    )
+
+    # Mock httpx streaming response
+    mock_response = MagicMock()
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=False)
+
+    async def fake_aiter():
+        yield b"fake-image-data"
+
+    mock_response.aiter_bytes = fake_aiter
+
+    mock_client = MagicMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.stream = MagicMock(return_value=mock_response)
+
+    with patch("httpx.AsyncClient", return_value=mock_client):
+        resp = client.get(f"/download/{gen_id}")
+        assert resp.status_code == 200
+        assert "attachment" in resp.headers.get("content-disposition", "")
+        assert f"sweep_{gen_id}.webp" in resp.headers["content-disposition"]

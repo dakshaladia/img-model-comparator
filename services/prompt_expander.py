@@ -105,13 +105,19 @@ async def expand_prompt(base_prompt: str, direction: str, count: int) -> list[st
         }],
     )
 
+    if not message.content:
+        return [base_prompt] * count
+
     text = message.content[0].text.strip()
 
     # Handle markdown code fences if present
     if text.startswith("```"):
         text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-    variations = json.loads(text)
+    try:
+        variations = json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        return [base_prompt] * count
 
     # Ensure correct count
     if len(variations) > count:

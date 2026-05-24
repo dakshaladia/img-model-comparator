@@ -12,9 +12,17 @@ async def prompt_expand(request: Request):
     form = await request.form()
     base_prompt = form.get("base_prompt", "")
     direction = form.get("direction", "")
-    count = int(form.get("count", 5))
+    try:
+        count = int(form.get("count", 5))
+    except (ValueError, TypeError):
+        count = 5
 
-    variations = await prompt_expander.expand_prompt(base_prompt, direction, count)
+    try:
+        variations = await prompt_expander.expand_prompt(base_prompt, direction, count)
+    except Exception:
+        return templates.TemplateResponse(request, "partials/prompt_variations.html", {
+            "variations": [base_prompt] * count,
+        })
 
     return templates.TemplateResponse(request, "partials/prompt_variations.html", {
         "variations": variations,
