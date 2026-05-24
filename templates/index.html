@@ -22,11 +22,13 @@
         <option value="{{ slug }}">{{ models[slug] }}</option>
         {% endfor %}
     </select>
+    <p id="model-description" class="mono" style="font-size:10.5px;color:var(--ink-3);margin-top:4px"></p>
     <div class="mt-2">
         <label class="label-mono block mb-1.5" style="color:var(--ink-4);font-size:9.5px">Compare across models</label>
         <div id="model-compare" class="flex flex-wrap gap-1.5">
             {% for slug in model_slugs %}
             <button type="button" class="chip" data-model-chip="{{ slug }}"
+                title="{{ descriptions[slug] }}"
                 onclick="toggleModelCompare('{{ slug }}')">
                 <span class="dot"></span>
                 <span class="mono">{{ models[slug] }}</span>
@@ -47,11 +49,14 @@
 
 <script>
     window.SWEEP_COSTS = {{ costs | tojson }};
-    // Update slug readout when model changes
+    window.MODEL_DESCRIPTIONS = {{ descriptions | tojson }};
+    // Update slug readout and description when model changes
     function updateReadout() {
         var sel = document.getElementById('model-select');
         var readout = document.getElementById('model-readout');
+        var desc = document.getElementById('model-description');
         if (sel && readout) readout.textContent = sel.value;
+        if (sel && desc) desc.textContent = window.MODEL_DESCRIPTIONS[sel.value] || '';
     }
     document.addEventListener('change', function(e) {
         if (e.target.id === 'model-select') updateReadout();

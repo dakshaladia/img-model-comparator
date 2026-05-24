@@ -169,4 +169,7 @@
     {% if input.description %}
         <p style="font-size:11.5px;color:var(--ink-4);line-height:1.4">{{ input.description }}</p>
     {% endif %}
+    {% if input.type in ("number", "integer") and input.minimum is not none and input.maximum is not none %}
+        <p class="mono" style="font-size:10px;color:var(--ink-4)">Range: {{ input.minimum | int if input.type == 'integer' else input.minimum }} – {{ input.maximum | int if input.type == 'integer' else input.maximum }}{% if input.default is not none %} · Default: {{ input.default | int if input.type == 'integer' else input.default }}{% endif %}</p>
+    {% endif %}
 </div>

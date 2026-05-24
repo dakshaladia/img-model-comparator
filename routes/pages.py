@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
-from config import COST_PER_IMAGE_USD, SUPPORTED_MODEL_SLUGS, SUPPORTED_MODELS
+from config import COST_PER_IMAGE_USD, MODEL_DESCRIPTIONS, SUPPORTED_MODEL_SLUGS, SUPPORTED_MODELS
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -13,4 +13,5 @@ async def index(request: Request):
         "model_slugs": SUPPORTED_MODEL_SLUGS,
         "models": SUPPORTED_MODELS,
         "costs": COST_PER_IMAGE_USD,
+        "descriptions": MODEL_DESCRIPTIONS,
     })

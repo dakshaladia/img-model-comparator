@@ -23,6 +23,15 @@ SUPPORTED_MODELS = {
     "stability-ai/stable-diffusion-3.5-large": "SD 3.5 Large",
 }
 
+MODEL_DESCRIPTIONS = {
+    "black-forest-labs/flux-schnell": "Fast photorealistic generation, great for rapid iteration",
+    "black-forest-labs/flux-1.1-pro": "High-quality photorealistic images with fine detail",
+    "bytedance/seedream-4": "Strong prompt adherence with vibrant, stylized outputs",
+    "google/imagen-4-fast": "Photorealistic with excellent text rendering",
+    "recraft-ai/recraft-v3": "Illustration-focused — logos, icons, and vector-style art",
+    "stability-ai/stable-diffusion-3.5-large": "Classic diffusion aesthetic, versatile and community-proven",
+}
+
 COST_PER_IMAGE_USD = {
     "black-forest-labs/flux-schnell": 0.003,
     "black-forest-labs/flux-1.1-pro": 0.04,
