@@ -3,6 +3,7 @@
 Parameter exploration tool for generative image models. Pick a model, mark any input as swept, run variations in parallel, compare results in a labeled grid.
 
 Supports 6 image models across 5 vendors. Forms are generated dynamically from each model's OpenAPI schema. Prompt sweep uses Claude Sonnet to expand a base prompt into stylistic variations along a named axis.
+
 Demo: https://youtu.be/z5TNO772rIQ
 
 ## Prerequisites
