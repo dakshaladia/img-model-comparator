@@ -30,8 +30,6 @@ This kind of tool is genuinely useful for Luma. Their researchers run parameter 
 
 ## Stack choices
 
-I'm being explicit about each choice because every reviewer will ask "why this, not that," and the answers matter as much as the choices.
-
 **FastAPI + Jinja2 + HTMX + Tailwind (CDN) + plain JS, no build step.**
 
 FastAPI + HTMX produces a server-rendered web app with no build pipeline, no client-side state machine. It is simple to debug, navigate and good for MVP without complicating things. As the next step, a better approach would be to use React and NextJs.
